@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fooco.FoodTruc.foodTruck.dao.FoodTruckDAO">
+	<!-- 판매자 1단계 정보 입력 -->
+	<!-- insert가 수행된 후 현재 시퀀스 값을 map형태의 키값 truckNum으로 값이 반환되어 외래키로 메뉴이미지를 등록할 수 있음 -->
+	<insert id="insertTruck" parameterType="map">
+		<selectKey keyProperty="truckNum" order="AFTER" resultType="int">
+  	    	SELECT max(truck_num) FROM foodtruck
+	    </selectKey>
+	    
+		INSERT INTO foodtruck 
+			(truck_num, seller_id, business_name, truck_name, truck_type, truck_stime, truck_etime, 
+			truck_reservation, truck_info, truck_image, truck_like, addreq, truck_date, truck_location)
+		VALUES ( foodtruck_seq.nextval, #{sellerId}, #{businessName}, #{truckName}, #{truckType}, #{truckStime}, #{truckEtime}, #{truckReservation},
+				#{truckInfo}, #{truckImage}, 0, 'Y', sysdate, #{trucklocation})
+				
+				
+	</insert>
+	
+	<!-- 등록 승인 완료된 푸드트럭 테이블(게시글) 총 갯수 구하기  (위치별용)-->
+	<select id="selectLocationTotalCount" parameterType="String" resultType="int">
+		SELECT count(*) 
+			FROM foodtruck f INNER JOIN seller_member s
+				ON f.seller_id = s.seller_id
+			WHERE s.seller_location = #{locationParam} AND f.addreq = 'N'
+	</select>
+	
+	<!-- 등록 승인완료되고, 파라미터로 전달받은 위치에 해당하는  리스트 가져오기 -->
+	<!-- 9.1 23:00pm updated By little Young Min -->
+	<select id="selectLocationList" parameterType="map" resultType="com.fooco.FoodTruc.foodTruck.vo.FoodTruckVO">
+		SELECT * FROM (
+			SELECT Tb.*, rownum rNum FROM
+				( SELECT f.* FROM
+					foodtruck f INNER JOIN seller_member s
+						ON f.seller_id = s.seller_id 
+					WHERE s.seller_location = #{location} AND f.addreq = 'N'
+				)Tb )
+		WHERE rNum BETWEEN #{offset} AND #{limit}
+	</select>
+	
+	<!-- 종류별 푸드트럭 불러오기 -->
+	<select parameterType="map" id="typeSelect" resultType="com.fooco.FoodTruc.foodTruck.vo.FoodTruckVO"> 
+		SELECT * FROM ( SELECT Tb.*, rownum rNum FROM
+						( SELECT * FROM foodtruck WHERE truck_type = #{truckType} ORDER by TRUCK_LIKE DESC )Tb 
+							WHERE Tb.addreq = 'N' ) 
+		WHERE rNum BETWEEN #{offset} AND #{limit} 
+	</select>
+	
+	<!-- 종류별 푸드트럭 총 레코드수 가져오기 -->
+	<select id="getTotalCount" resultType="int"> 
+		SELECT count(*) FROM foodtruck WHERE truck_type = #{param1} AND addreq = 'N' 
+	</select>
+	
+	<!-- 랭킹리스트 시작 -->
+
+	<select id="rankingTotalCount" resultType="int"> 
+		SELECT count(*) FROM FoodTruck 
+	</select>
+	
+	<select id="trukRankList" resultType="com.fooco.FoodTruc.foodTruck.vo.FoodTruckVO"> 
+		SELECT * FROM (SELECT rownum Rn, Ranking.* FROM 
+			(SELECT ft.truck_num,ft.seller_id,ft.truck_name, ft.truck_info, ft.truck_like, ft.truck_image,ft.truck_type, 
+				sum(rt.score)+sum(ft.truck_like) Soc FROM foodtruck ft JOIN reply_truck rt 
+					ON ft.truck_num = rt.truck_num GROUP BY ft.truck_num,ft.seller_id,ft.truck_name, ft.truck_info, 
+					ft.truck_like,ft.truck_image,ft.truck_type ORDER BY Soc DESC ) Ranking) 
+		WHERE Rn BETWEEN #{start} AND #{end} 
+		
+	</select>
+	
+	<select id="selectRankingLike" resultType="com.fooco.FoodTruc.foodTruck.vo.FoodTruckVO"> 
+		SELECT * FROM (SELECT rownum Rn, tb.* 
+			FROM (SELECT * FROM FoodTruck ORDER BY truck_like DESC)Tb)
+		WHERE Rn BETWEEN #{start} AND #{end} 
+	</select>
+	
+	<select id="selectRankingScore" resultType="com.fooco.FoodTruc.foodTruck.vo.FoodTruckVO"> 
+		SELECT * FROM (SELECT rownum Rn, Tlike.*FROM 
+			(SELECT ft.truck_num , ft.business_name, ft.truck_name, ft.truck_type, ft.truck_info,
+			 ft.truck_image, ft.truck_like, AVG(rt.score) Av 
+			 FROM foodtruck ft LEFT JOIN reply_truck rt ON ft.truck_num = rt.truck_num 
+			 GROUP BY ft.truck_num , ft.business_name, ft.truck_name, ft.truck_type, ft.truck_info, 
+			 ft.truck_image, ft.truck_like ORDER BY Av DESC)Tlike)
+		WHERE Rn BETWEEN #{start} AND #{end} 
+	</select>
+	
+	<select id="selectRankingReply" resultType="com.fooco.FoodTruc.foodTruck.vo.FoodTruckVO"> 
+		SELECT * FROM (SELECT rownum Rn, Rep.* FROM(SELECT ft.truck_num , ft.business_name, 
+			ft.truck_name, ft.truck_type, ft.truck_info, ft.truck_image, ft.truck_like, count(rt.reply_content)cn 
+			FROM foodtruck ft LEFT JOIN reply_truck rt ON ft.truck_num = rt.truck_num GROUP BY ft.truck_num , 
+			ft.business_name, ft.truck_name, ft.truck_type, ft.truck_info, ft.truck_image, ft.truck_like ORDER BY cn DESC)Rep) 
+		WHERE Rn BETWEEN #{start} AND #{end} 
+	</select>
+
+	<!-- 랭킹리스트 끝 -->
+	
+	<!-- 트럭 상세보기 start-->
+	<!-- foodtruck 테이블 조회 	-->
+	<select id="selectDetailTruck" parameterType="int" resultType="com.fooco.FoodTruc.foodTruck.vo.FoodTruckVO">
+		SELECT * FROM foodtruck WHERE truck_num = #{truckNum} and addreq='N'
+	</select> 
+	
+	<!-- 상세보기 조회수 update -->
+	<update id="updateDetailTruck" parameterType="int">
+		UPDATE foodtruck SET truck_visit = truck_visit+1 WHERE truck_num = #{truckNum}
+	</update>
+	
+	<!-- like update -->
+	<update id="updateTruckLike" parameterType="int">
+		UPDATE foodtruck SET truck_like = truck_like+1 WHERE truck_num = #{truckNum}
+	</update>
+	
+	<!-- select like -->
+	<select id="selectTruckLike" parameterType="int" resultType="int">
+		SELECT truck_like FROM foodtruck WHERE truck_num = #{truckNum}
+	</select>
+	
+	<!-- ./트럭 상세보기 end -->
+	
+	<!-- S E O s t a r t -->
+
+	<!-- Open Date Service FOod Truck By S E O-->
+	
+	<!-- 등록 승인 완료된 푸드트럭 테이블(게시글) 총 갯수 구하기 (날짜별용)-->
+	
+	<select parameterType="String" id="selectDateTotalCount" resultType="int"> 
+		SELECT count(*) FROM foodtruck WHERE to_date(substr(truck_etime, 1, 10), 'yyyy-mm-dd') > to_date('17-08-10', 'yyyy-mm-dd') AND addreq = 'N' 
+	</select>
+	
+	<select id="selectOpenDateList" parameterType="map" resultType="com.fooco.FoodTruc.foodTruck.vo.FoodTruckVO">
+      SELECT * FROM (
+          SELECT t.*, ROW_NUMBER() OVER(ORDER BY truck_date DESC) AS RNUM
+             FROM (
+               SELECT * FROM foodtruck <![CDATA[ WHERE 
+                  to_date(#{openDate}, 'yyyy-mm-dd') < to_date(substr(truck_etime, 1, 10), 'yyyy-mm-dd') ]]>  
+                     AND addreq = 'N'                    
+                ) t
+        )
+      WHERE RNUM BETWEEN #{start} AND #{end}
+   </select>
+	
+	<!-- 판매등록된 푸드트럭 8개씩 리스트로 가저오기. -->
+	<select id="list" resultType="com.fooco.FoodTruc.foodTruck.vo.FoodTruckVO"> 
+		SELECT * FROM ( SELECT t.*, ROW_NUMBER() OVER(ORDER BY truck_date DESC) AS RNUM FROM foodtruck t WHERE addreq = 'N') 
+		WHERE RNUM BETWEEN #{param1} AND #{param2} 
+	</select>
+	
+	<!-- search function Lists By SEO -->
+	<select id="searchLists" parameterType="map"  resultType="com.fooco.FoodTruc.foodTruck.vo.FoodTruckVO"> 
+		select ft.*, rownum from foodtruck ft inner join menu m
+			on ft.truck_num = m.truck_num
+				where ${searchOptionParam} = #{searchTextParam} and rownum between #{startParam} and #{endParam} 
+	</select>
+	
+	<!-- searchTotalCount function By SEO -->
+	<select id="searchTotalCount" parameterType="map"  resultType="int"> 
+		select count(*) from foodtruck ft inner join menu m
+			on ft.truck_num = m.truck_num
+				where ${searchOptionParam} = #{searchTextParam} 
+	</select>
+	<!-- S E O e n d -->
+	
+	<!-- /////////////마이페이지 관련/////////// -->
+
+
+	<!-- 좋아요 수 불러오기 -->
+
+	<select id="likeCountSeller" resultType="com.fooco.FoodTruc.foodTruck.vo.FoodTruckVO"> 
+		SELECT Ft.truck_like FROM foodtruck Ft JOIN seller_member Sm ON Ft.seller_id = Sm.seller_id WHERE Sm.seller_id = #{sellerId} 
+	</select>
+
+	<!-- 조하요 리스트 불러오기 -->
+	<select id="likeCountUserList" resultType="com.fooco.FoodTruc.foodTruck.vo.FoodTruckVO"> 
+		SELECT ft.* FROM foodtruck ft JOIN (SELECT um.*, rt.reply_num,rt.truck_num,rt.reply_content, rt.score, 
+			rt.reply_date FROM user_member um JOIN reply_truck rt ON um.member_id = rt.member_id)sr 
+			ON sr.truck_num = ft.truck_num WHERE member_id = #{memberId} 
+	</select>
+
+	<!-- My Truck 갯수 가져오기 -->
+	<!-- 09/03 updated By Young Min -->
+	<select id="selectMyTruckNumber" parameterType="String" resultType="int">
+		SELECT count(*) FROM foodtruck WHERE seller_id = #{sellerId}
+	</select>
+	
+	<!-- My Truck List 가져오기 -->
+	<select id="selectMyTruckList" parameterType="String" resultType="com.fooco.FoodTruc.foodTruck.vo.FoodTruckVO">
+		SELECT * FROM foodtruck WHERE seller_id = #{sellerId}
+	</select>
+	
+	<!-- My Truck 삭제하기 -->
+	<delete id="deleteTruck" parameterType="int">
+		DELETE FROM foodtruck WHERE truck_num = #{truckNum}
+	</delete>
+	
+	<!-- My Truck 수정하기 -->
+	<update id="updateTruck" parameterType="map">
+		update foodtruck
+			set truck_name = #{truckName}, truck_type = #{truckType}, truck_stime = #{truckStime},
+							truck_etime = #{truckEtime}, truck_reservation = #{truckReservation},
+							truck_info = #{truckInfo}, truck_image = #{truckImg}
+		where truck_num = #{truckNum}
+	</update>
+	
+<!-- /////////////마이페이지 관련/////////// -->
+	
+	<!-- 트럭 1단계 등록하다가 메뉴 등록할때 작성취소 누르면 -->
+	<delete id="deleteTruckByCancel" parameterType="int">
+		DELETE FROM foodtruck WHERE truck_num = #{truckNum}
+	</delete>
+	
+	
+	<!-- Like 취소  -->
+	<update id="minusLike" parameterType="int">
+		UPDATE foodtruck SET truck_like = truck_like-1 WHERE truck_num = #{truckNum}
+	</update>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

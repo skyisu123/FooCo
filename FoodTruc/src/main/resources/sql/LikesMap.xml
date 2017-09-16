@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="com.fooco.FoodTruc.likes.dao.LikesDAO">
+	
+	<select id="selectIsLikeExist" parameterType="map" resultType="int">
+		SELECT count(*) FROM likes 
+			WHERE member_id = #{memberId} AND truck_num = #{truckNum}
+	</select>
+	
+	<insert id="insertLikes" parameterType="map">
+		INSERT INTO likes
+			(member_id, truck_num)
+		VALUES 
+			(#{memberId}, #{truckNum})
+	</insert>
+	
+	<delete id="deleteLikes" parameterType="map">
+		DELETE FROM likes
+			WHERE member_id = #{memberId} AND truck_num = #{truckNum}
+	</delete>
+	
+</mapper>

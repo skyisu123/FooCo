@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+	<!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+	
+	<!-- Enables the Spring MVC @Controller programming model -->
+	<annotation-driven />
+	<!-- 인터셉터 -->
+	<mvc:annotation-driven />
+	<!-- 트랜잭션 -->
+	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+	
+	<!-- Handles HTTP GET requests for /resources/** by efficiently serving up static resources in the ${webappRoot}/resources directory -->
+	<resources mapping="/resources/**" location="/resources/" />
+	<resources mapping="/bootstrap/**" location="/bootstrap/" />
+
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+	<beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/views/" />
+		<beans:property name="suffix" value=".jsp" />
+	</beans:bean>
+	
+	<context:component-scan base-package="com.fooco.FoodTruc" />
+	<!-- <context:component-scan base-package="com.fooco.FoodTruc.truck.controller" />
+	<context:component-scan base-package="com.fooco.FoodTruc.member.controller" /> -->
+	
+	<beans:bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"> 
+		<beans:property name="maxUploadSize" value="10000000" />
+	</beans:bean>
+	
+
+	<!-- 인터셉터 설정 -->
+	<mvc:interceptors>
+	    <mvc:interceptor>
+	        <mvc:mapping path="/user/memberMyPage.do" />
+	        <mvc:mapping path="/user/MyInfoPage.do" />
+	        <mvc:mapping path="/user/userUpdate.do" />
+	        <mvc:mapping path="/user/sellerUpdate.do" />
+	        
+	        <mvc:mapping path="/truck/truckMenuAddAction.do" />
+	        
+	        <mvc:mapping path="/foodTruck/*.do" /> 
+	        <mvc:mapping path="/query/*.do" />
+	        
+	        <beans:bean class="common.CommonSessionInterceptor"/>
+	    </mvc:interceptor>
+	    
+	    <mvc:interceptor>
+	    <!-- 상세보기 페이지에서 판매자가 review작성 및 like 시  및 로그인 하지 않은상태 인터셉트 -->
+	    	<mvc:mapping path="/reply/insertReview.do" />
+	    <!-- 상세보기 페이지에서 판매자 or 일반회원이 like 시 alert -->
+	    	<mvc:mapping path="/truck/updateTruckLike.do" />
+	    	
+	    	<beans:bean class="com.fooco.FoodTruc.replyTruck.interceptor.ReplyInterceptor"/>
+	    </mvc:interceptor>
+	</mvc:interceptors>
+
+	
+</beans:beans>
+
+
+
+
+
+
+
+
+

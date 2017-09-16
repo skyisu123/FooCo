@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fooco.FoodTruc.member.dao.SellerDAO">
+	
+	<!-- 푸드트럭 판매자 회원가입 -->
+	<insert id="insertSeller" parameterType="com.fooco.FoodTruc.member.vo.SellerVO">
+		INSERT INTO SELLER_MEMBER 
+			(SELLER_ID, SELLER_PW, SELLER_NAME, SELLER_EMAIL, SELLER_PHONE, SELLER_CODE, CODE_NAME, SELLER_LOCATION, SELLER_BLOGADDR)
+		VALUES (#{sellerId}, #{sellerPw}, #{sellerName}, #{sellerEmail}, #{sellerPhone}, #{sellerCode}, #{codeName}, #{sellerLocation}, #{sellerBlogaddr})
+	</insert>
+	
+	<!-- 푸드트럭 판매자 로그인  -->
+	<select id="sellerLogin" resultType="com.fooco.FoodTruc.member.vo.SellerVO" parameterType="map">
+		SELECT *
+		FROM seller_member
+		WHERE seller_id = #{seller_id} AND seller_pw = #{seller_pw}
+	</select>
+	
+	<!-- seller_member 테이블 조회 -->
+	<select id="selectDetailMember" parameterType="String" resultType="com.fooco.FoodTruc.member.vo.SellerVO">
+		SELECT * FROM seller_member WHERE seller_id = #{sellerId}
+	</select>
+	
+	
+	<!-- ///////////////////////////////// -->
+	<!-- 회원수정 시작-->
+	
+	<update id="updateInfoSeller"> 
+		UPDATE seller_member SET seller_pw = #{sellerPw}, seller_name = #{sellerName}, seller_email = #{sellerEmail}, seller_phone = #{sellerPhone}, seller_code = #{sellerCode}, code_name = #{codeName}, seller_location = #{sellerLocation}, seller_blogaddr = #{sellerBlogaddr} WHERE seller_id = #{sellerId}
+	</update>
+	
+	
+	<!-- Find Id By Young Min -->
+	<!-- user_member 테이블 이름 & 폰 번호로 찾기 -->
+	<select id="selectFindIdByPhone" resultType="String" parameterType="map">
+		SELECT seller_id 
+			FROM seller_member 
+		WHERE seller_name = #{memberName} AND seller_phone = #{memberPhone}	
+	</select>
+	
+	<!-- user_member 테이블 이름 & 이메일로 찾기 -->
+	<select id="selectFindIdByEmail" resultType="String" parameterType="map">
+		SELECT seller_id 
+			FROM seller_member 
+		WHERE seller_name = #{memberName} AND seller_email = #{memberEmail}
+	</select>
+	
+	<!-- Find Id End -->	
+	
+	
+	<!-- 비번 찾기 9/3 -->
+<select parameterType="map" id="selectFindPw" resultType="String"> 
+	SELECT seller_pw FROM seller_member 
+	WHERE seller_id = #{memberId} AND seller_phone = #{memberPhone} AND seller_email = #{memberEmail} 
+</select>
+
+<!-- /\/\/\/\/\/\/\/\/\ 비밀번호 재설정/\/\/\/\/\/\/\/\\/\/\/\ -->
+
+<select id="selectCheckPw" resultType="int"> 
+	SELECT count(*) FROM seller_member WHERE seller_id = #{param1} AND seller_pw = #{param2}
+ </select>
+
+<update id="UpdateNewPw"> 
+	UPDATE seller_member SET seller_pw = #{param2} WHERE seller_id = #{param1} 
+</update>
+	
+<!-- /\/\/\/\/\/\/\/\/\ 비밀번호 재설정 끝/\/\/\/\/\/\/\/\\/\/\/\ -->
+	
+</mapper>

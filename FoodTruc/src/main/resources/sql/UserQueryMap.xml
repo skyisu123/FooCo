@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fooco.FoodTruc.query.dao.UserQueryDAO">
+	
+	<insert id="querySend" parameterType="map">
+		INSERT INTO user_query 
+		(query_num, query_type, query_title, query_content,
+		query_read,query_date, member_id, seller_id) 
+		VALUES ( user_query_seq.nextval, #{queryType}, #{queryTitle}, #{queryContent}, 
+		 'Y', sysdate, #{memberId}, #{sellerId} )
+	</insert>
+	
+	
+
+	<select id="showList" parameterType="map"
+	resultType="com.fooco.FoodTruc.query.vo.UserQueryVO">
+	SELECT * FROM (
+			 SELECT Tb.*, rownum rNum FROM(
+			 	 SELECT * FROM user_query WHERE member_id = #{memberId} and query_read = #{read}
+			 	  ORDER by query_date DESC
+			 	 )Tb
+		) WHERE rNum BETWEEN #{offset} AND #{limit}
+	</select>
+	<select id="getTotalCount" parameterType="String" resultType="int">
+	SELECT count(*) FROM user_query WHERE member_id = #{param1} and query_read = #{param2}
+	</select>
+	<select id="getQueryCount" parameterType="String" resultType="int">
+	SELECT count(*) FROM user_query WHERE seller_id = #{param1} and query_read = #{param2}
+	</select>
+</mapper>

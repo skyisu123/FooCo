@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fooco.FoodTruc.query.dao.SellerQueryDAO">
+	<insert id="querySend" parameterType="map">
+		INSERT INTO seller_query 
+		(query_num, seller_id, query_type, query_title, query_content,
+		query_read,query_date) 
+		VALUES ( seller_query_seq.nextval, #{sellerId}, #{queryType}, #{queryTitle}, #{queryContent}, 'Y', sysdate )
+	</insert>
+	
+	
+	
+	
+	<delete id="deleteSellerQuery" parameterType="String">
+		DELETE FROM seller_query WHERE query_num = #{param1}
+	</delete>
+	
+	<delete id="deleteUserQuery" parameterType="String">
+		DELETE FROM user_query WHERE query_num = #{param1}
+	</delete>
+	
+	<select id="showReceiveView" parameterType="String"
+		resultType="com.fooco.FoodTruc.query.vo.UserQueryVO">
+		SELECT * FROM user_query WHERE query_num = #{param1}
+	</select>
+	
+	<select id="replyList" parameterType="String"
+		resultType="com.fooco.FoodTruc.query.vo.ReplyQueryVO">
+		SELECT * FROM reply_query WHERE query_code = #{param1}
+	</select>
+	
+	<select id="showView" parameterType="String"
+		resultType="com.fooco.FoodTruc.query.vo.SellerQueryVO">
+		SELECT * FROM seller_query WHERE query_num = #{param1}
+	</select>
+	
+	<update id="answerAction" parameterType="map">
+		update user_query
+			set query_title = #{queryTitle},
+				query_content = #{queryContent},
+				query_read = 'N'
+			where
+				query_num = #{queryNum}
+	</update>
+	
+	<update id="editSellerAction" parameterType="map">
+		update seller_query
+			set query_title = #{queryTitle},
+				query_content = #{queryContent},
+				query_read = 'Y'
+			where
+				query_num = #{queryNum}
+	</update>
+	
+	<update id="editUserAction" parameterType="map">
+		update user_query
+			set query_title = #{queryTitle},
+				query_content = #{queryContent},
+				query_read = 'Y'
+			where
+				query_num = #{queryNum}
+	</update>
+	
+	<select id="showReceiveList" parameterType="map"
+	resultType="com.fooco.FoodTruc.query.vo.UserQueryVO">
+	SELECT * FROM (
+			 SELECT Tb.*, rownum rNum FROM(
+			 	 SELECT * FROM user_query WHERE seller_id = #{sellerId} and query_read = #{read}
+			 	  ORDER by query_date DESC
+			 	 )Tb
+		) WHERE rNum BETWEEN #{offset} AND #{limit}
+	</select>
+	<select id="showList" parameterType="map"
+	resultType="com.fooco.FoodTruc.query.vo.SellerQueryVO">
+	SELECT * FROM (
+			 SELECT Tb.*, rownum rNum FROM(
+			 	 SELECT * FROM seller_query WHERE seller_id = #{sellerId}
+			 	  ORDER by query_date DESC
+			 	 )Tb
+		) WHERE rNum BETWEEN #{offset} AND #{limit}
+	</select>
+	
+	<select id="showReplyQuery" parameterType="map"
+	resultType="com.fooco.FoodTruc.query.vo.ReplyQueryVO">
+	SELECT * FROM (
+			 SELECT Tb.*, rownum rNum FROM(
+			 	 SELECT * FROM reply_query WHERE seller_id = #{sellerId}
+			 	  ORDER by reply_date DESC
+			 	 )Tb
+		) WHERE rNum BETWEEN #{offset} AND #{limit}
+	</select>
+	<select id="getReceviceTotalCount" parameterType="String" resultType="int">
+	SELECT count(*) FROM user_query WHERE seller_id = #{param1} and query_read = #{param2}
+	</select>
+	<select id="getTotalCount" parameterType="String" resultType="int">
+	SELECT count(*) FROM seller_query WHERE seller_id = #{param1}
+	</select>
+	<select id="getReplyTotalCount" parameterType="String" resultType="int">
+	SELECT count(*) FROM reply_query WHERE seller_id = #{param1}
+	</select>
+</mapper>

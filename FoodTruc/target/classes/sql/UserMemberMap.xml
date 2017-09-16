@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fooco.FoodTruc.member.dao.UserDAO">
+	<!-- 이용자 로그인  -->
+	<select id="userLogin" resultType="com.fooco.FoodTruc.member.vo.UserVO" parameterType="map">
+		SELECT *
+		FROM user_member
+		WHERE member_id = #{member_id} AND member_pw = #{member_pw}
+	</select>
+	
+	<!-- 가입관련 -->
+	<!-- 회원 아이디 중복검사 -->
+	<select id="checkId" resultType="int">
+		SELECT COUNT(*)
+		FROM SELLER_MEMBER SM, USER_MEMBER UM
+		WHERE SM.SELLER_ID = #{memberId} OR UM.MEMBER_ID = #{memberId}
+	</select>
+	
+	<!-- 푸드트럭 이용자 회원가입 -->
+	<insert id="">
+		
+	</insert>
+	
+	<!-- 가입관련 끝 -->
+	
+	<!-- //////////\\\\\\\회원정보 수정관련 시작\\\\\\\////////// -->
+
+
+<!-- 회원수정 시작-->
+	<update id="updateInfoUser"> 
+		UPDATE user_member SET member_pw = #{memberPw}, member_name = #{memberName}, 
+			member_email = #{memberEmail}, member_phone = #{memberPhone}, member_addr = #{memberAddr} 
+			WHERE member_id = #{memberId} 
+	</update>
+
+<!-- 회원수정 끝-->
+
+
+<!-- 좋아요 카운팅 시작 -->
+	<select resultType="int" id="likeCountUser"> 
+		SELECT count(rc.truck_like) from( SELECT sr.*, ft.truck_like FROM foodtruck ft JOIN 
+			(SELECT um.*, rt.reply_num,rt.truck_num,rt.reply_content, rt.score, rt.reply_date 
+				FROM user_member um JOIN reply_truck rt ON um.member_id = rt.member_id)sr 
+				ON sr.truck_num = ft.truck_num)rc 
+		WHERE member_id = #{memberId} 
+	</select>
+
+<!-- 좋아요 카운팅 끝 -->
+
+
+<!-- //////////\\\\\\\회원정보 수정관련 끝\\\\\\\////////// -->
+	
+	
+	<!-- Find Id By Young Min -->
+	<!-- user_member 테이블 이름 & 폰 번호로 찾기 -->
+	<select id="selectFindIdByPhone" resultType="String" parameterType="map">
+		SELECT member_id 
+		FROM user_member 
+		WHERE member_name = #{memberName} AND member_phone = #{memberPhone}	
+	</select>
+	
+	<!-- user_member 테이블 이름 & 이메일로 찾기 -->
+	<select id="selectFindIdByEmail" resultType="String" parameterType="map">
+		SELECT member_id 
+		FROM user_member 
+		WHERE member_name = #{memberName} AND member_email = #{memberEmail}
+	</select>
+	
+	<!-- Find Id End -->	
+	
+	<!-- /\/\/\/\/\/\/\/\/\ 사용자 비번찾기 시작 9/3 /\/\/\/\/\/\/\/\\/\/\/\ -->
+
+
+<!-- user_member 테이블 이름 & 폰 번호로 찾기 -->
+
+
+<select parameterType="map" resultType="String" id="selectFindPw">
+ 	SELECT member_pw FROM user_member WHERE member_id = #{memberId} AND member_phone = #{memberPhone} AND member_email = #{memberEmail} 
+ </select>
+
+<!-- /\/\/\/\/\/\/\/\/\ 사용자 회원가입 시작/\/\/\/\/\/\/\/\\/\/\/\ -->
+
+
+<insert parameterType="com.fooco.FoodTruc.member.vo.UserVO" id="userJoinUs"> 
+	INSERT INTO user_member (member_id, member_pw, member_name, member_email,member_phone, member_addr, member_date)
+	 VALUES(#{memberId},#{memberPw},#{memberName},#{memberEmail},#{memberPhone},#{memberAddr}, sysdate) 
+</insert>
+
+<!-- /\/\/\/\/\/\/\/\/\ 사용자 회원가입 끝 /\/\/\/\/\/\/\/\\/\/\/\ -->
+
+
+<!-- /\/\/\/\/\/\/\/\/\ 비밀번호 재설정/\/\/\/\/\/\/\/\\/\/\/\ -->
+
+
+<select parameterType="String" resultType="int" id="selectCheckPw"> 
+	SELECT count(*) FROM user_member WHERE member_id = #{param1} AND member_pw = #{param2} 
+</select>
+
+<update id="UpdateNewPw"> 
+	UPDATE user_member SET member_pw = #{param2} WHERE member_id = #{param1} 
+</update>
+	
+<!-- /\/\/\/\/\/\/\/\/\ 비밀번호 재설정 끝/\/\/\/\/\/\/\/\\/\/\/\ -->	
+	
+	
+	
+</mapper>

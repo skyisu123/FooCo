@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fooco.FoodTruc.replyTruck.dao.ReplyTruckDAO">
+<!-- By Young Min -->
+	<!-- reply_truck 테이블 조회 -->
+	<select id="selectDetailReplyTruck" parameterType="int" resultType="com.fooco.FoodTruc.replyTruck.vo.ReplyTruckVO">
+		select * from reply_truck where truck_num = #{truckNum}
+	</select>
+	
+	<!-- 해당 트럭의 리뷰 수 얻어오기 -->
+	<select id="selectReplyCount" resultType="int">
+		SELECT count(*) FROM reply_truck WHERE truck_num = #{truckNum}
+	</select>
+	
+	<!-- 해당 트럭의 리스트 가져오기 -->
+	<select id="selectReplyTruck" parameterType="map" resultType="com.fooco.FoodTruc.replyTruck.vo.ReplyTruckVO">
+		SELECT * FROM (
+			SELECT Tb.*, rownum rNum
+				FROM (
+					SELECT * FROM reply_truck
+					WHERE truck_num = #{truckNum}
+					ORDER BY reply_date DESC
+				) Tb
+			)
+		WHERE rNum BETWEEN #{start} AND #{end}
+	</select>
+	
+	<!-- 한줄평 insert -->
+	<insert id="insertReview" parameterType="map">
+		INSERT INTO reply_truck 
+			(reply_num, member_id, truck_num, reply_content, score, reply_date, reply_read)
+		VALUES
+			(
+				reply_truck_seq.nextval, 
+				#{memberId},  
+				#{truckNum},
+				#{replyContent},
+				#{score},
+				sysdate,
+				'Y'
+			)
+	</insert>
+	
+	<!-- //////////\\\\\\\회원정보 수정관련 시작\\\\\\\////////// -->
+
+
+<!-- 한줄평 카운팅 시작 -->
+<select resultType="int" id="CountContentUser"> SELECT Count(reply_content) FROM reply_truck WHERE member_id = #{memberId} </select>
+
+<!-- 한줄평 카운팅 끝-->
+
+
+<!-- 한줄평 불러오기 시작 -->
+<select resultType="com.fooco.FoodTruc.replyTruck.vo.ReplyTruckVO" id="CountContentUserList"> SELECT * FROM reply_truck WHERE member_id = #{memberId} </select>
+
+<!-- 한줄평 불러오기 끝 -->
+
+<!-- 판매자 한줄평 수 받아오기 -->
+<select resultType="int" id="countContentSeller" parameterType="String"> SELECT count(Rt.reply_content) from reply_truck Rt JOIN (SELECT truck_num from foodtruck WHERE seller_id = #{sellerId})Tn ON Rt.truck_num = Tn.truck_num </select>
+
+<!-- //////////\\\\\\\회원정보 수정관련 끝\\\\\\\////////// -->
+	
+<!--  -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</mapper>

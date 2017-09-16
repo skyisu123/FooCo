@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fooco.FoodTruc.menu.dao.MenuDAO">
+	
+	<insert id="insertMenu" parameterType="map">
+		<selectKey keyProperty="menuCode" order="BEFORE" resultType="int">
+  	    	SELECT MENU_CODE_SEQ.nextval FROM dual
+	    </selectKey>
+	    
+		INSERT INTO menu (menu_code, truck_num, menu_category, menu_name, menu_price, inventory)
+		VALUES (
+			
+			#{menuCode}, 
+			#{truckNum}, 
+			#{menuCategory}, 
+			#{menuName}, 
+			#{menuPrice},
+			#{inventory}
+		)
+	</insert>
+	
+	<insert id="insertMenuImage" parameterType="map">
+		INSERT INTO menu_image (menu_code, image_name)
+		VALUES ( #{menuCode}, #{imageName} )
+	</insert>
+	
+	<!-- menu 테이블 조회 -->
+	<select id="selectDetailMenu" parameterType="int" resultType="com.fooco.FoodTruc.menu.vo.MenuVO">
+		SELECT * FROM menu WHERE truck_num = #{truckNum} ORDER BY menu_code ASC
+	</select>
+	
+	<!-- 수정 전 Menu목록 지움 -->
+	<delete id="deleteMenuModifyBefore" parameterType="int">
+		DELETE FROM menu WHERE truck_num = #{truckNum}
+	</delete>
+	
+	<!-- 수정 전 Menu_image 목록 지움 -->
+	
+	
+	
+</mapper>
